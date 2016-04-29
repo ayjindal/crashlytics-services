@@ -1,48 +1,43 @@
 class Service::Flock < Service::Base
   title 'Flock'
 
-  string :webhook_url, :placeholder => 'Incoming Webhook URL',
+  string :url, :placeholder => 'Incoming Webhook URL',
                  :label => 'Flock Incoming Webhook URL. <br />' \
-                   'To create an incoming webhook, go to your Flock admin panel and switch to \"Webhooks\" tab'
+                   'To create an incoming webhook, go to your Flock admin panel and switch to "Webhooks" tab'
 
-  page 'Webhook Information', [ :webhook_url ]
-
-  def receive_verification(config, _)
-    success = [true,  'Successfully verified Flock service hook']
-    failure = [false, 'Oops! Please check your Flock service hook configuration again.']
-    message = 'Successfully configured Flock service hook with Crashlytics'
-    response = post_to_flock(config[:webhook_url], message)
-    if successful_response?(response)
-      success
+  def receive_verification
+    response = post_to_flock('Successfully configured Flock service hook with Crashlytics')
+    if response.success?
+      log('verification successful')
     else
-      failure
+      display_error "#{self.class.title} verification failed - #{error_response_details(response)}"
     end
   end
 
-  def receive_issue_impact_change(config, payload)
-    success = [true,  'Successfully posted issue impact change message to Flock']
-    failure = [false, 'Oops! Some problem occurred while posting issue impact change message to Flock']
-    message = Service::Flock.extract_flock_message(payload)
-    response = post_to_flock(config[:webhook_url], message)
-    if successful_response?(response)
-      success
+  def receive_issue_impact_change(payload)
+    message = extract_flock_message(payload)
+    response = post_to_flock(message)
+    if response.success?
+      log('issue_impact_change successful')
     else
-      failure
+      display_error "#{self.class.title} issue impact change failed - #{error_response_details(response)}"
     end
   end
 
-  def self.extract_flock_message(payload)
-  	message = "#{payload[:app][:name]} crashed at #{payload[:title]}\n"+
-  	  "Method: #{payload[:method]}\n" + 
-  	  "Number of crashes: #{payload[:crashes_count]}\n" + 
-  	  "Number of impacted devices: #{payload[:impacted_devices_count]}\n" + 
-  	  "More information: #{payload[:url]}"
+  def extract_flock_message(payload)
+    "#{payload[:app][:name]} crashed at #{payload[:title]}\n" +
+    "Method: #{payload[:method]}\n" +
+    "Number of crashes: #{payload[:crashes_count]}\n" +
+    "Number of impacted devices: #{payload[:impacted_devices_count]}\n" +
+    "More information: #{payload[:url]}"
   end
 
-  def post_to_flock(webhook_url, message)
-    body = {:text => message}
-    response = http_post(webhook_url) do |request|
-      request.body = body
+  def post_to_flock(message)
+    body = { :text => message }
+
+    http_post(config[:url]) do |request|
+      request.headers['Content-Type'] = 'application/json'
+      request.body = body.to_json
     end
   end
 end

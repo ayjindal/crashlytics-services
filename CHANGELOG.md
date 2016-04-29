@@ -1,4 +1,64 @@
 =======
+5.7.0
+-----
+- Add Flock
+
+5.6.2
+-----
+- Clarify error messaging for WebHook issue impact change failures.
+
+5.6.1
+-----
+- Fix bug with duplicate loading of WebHook
+
+5.6.0
+-----
+- Make Moxtra and Appaloosa extend WebHook to eliminate duplication.
+
+5.5.1
+-----
+- Improve Jira error logging to aid troubleshooting.
+
+5.5.0
+-----
+- Add `issue_velocity_alert` support to Jira
+
+5.4.0
+-----
+- Add `issue_velocity_alert` support to Slack
+
+5.3.0
+-----
+HipChat updates:
+- more expressive messaging.
+- `issue_velocity_alert` support
+
+5.2.0
+-----
+- Remove successful_response? and stop using it
+
+5.1.0
+-----
+- Remove Hall
+
+5.0.0
+-----
+- Switch over several services to use our internal http libraries.
+
+4.1.1
+------
+- Fix IPv6 Blacklist
+- Prevent IP blacklisting in service specs
+
+4.1.0
+------
+- Clarify how we escalate errors to the UI.
+
+4.0.0
+------
+- Simplify signatures that need to be implemented by service subclasses.
+- Remove 'pages' annotation, which is no longer in use.
+
 3.32.0
 ------
 - Further reduce use of response body in error messages
