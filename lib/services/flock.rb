@@ -1,12 +1,14 @@
 class Service::Flock < Service::Base
   title 'Flock'
 
-  string :url, :placeholder => 'Incoming Webhook URL',
-                 :label => 'Flock Incoming Webhook URL. <br />' \
-                   'To create an incoming webhook, go to your Flock admin panel and switch to "Webhooks" tab'
+  string :url, :placeholder => 'Flock Webhook URL',
+                 :label => 'Go to the <a href="https://apps.flock.co/crashlytics">Flock App Store</a> and install the Crashlytics app. <br />' \
+                    'Generate the Flock Webhook URL and paste it below:'
 
   def receive_verification
-    response = post_to_flock('Successfully configured Flock service hook with Crashlytics')
+    message = 'Successfully configured Flock service hook with Crashlytics'
+    payload = { :event => 'verification', :payload_type => 'none' }
+    response = post_to_flock(message, payload)
     if response.success?
       log('verification successful')
     else
@@ -16,7 +18,7 @@ class Service::Flock < Service::Base
 
   def receive_issue_impact_change(payload)
     message = extract_flock_message(payload)
-    response = post_to_flock(message)
+    response = post_to_flock(message, payload)
     if response.success?
       log('issue_impact_change successful')
     else
@@ -32,10 +34,14 @@ class Service::Flock < Service::Base
     "More information: #{payload[:url]}"
   end
 
-  def post_to_flock(message)
-    body = { :text => message }
-
-    http_post(config[:url]) do |request|
+  def post_to_flock(message, payload)
+    url = config[:url]
+    if (url.start_with?('https://apps.flock')) 
+      body = payload
+    elsif (url.start_with?('https://api.flock'))
+      body = { :text => message }
+    end  
+    http_post(url) do |request|
       request.headers['Content-Type'] = 'application/json'
       request.body = body.to_json
     end
